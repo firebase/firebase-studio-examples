@@ -1,0 +1,1 @@
+{"version":3,"file":"genkit.js","sourceRoot":"","sources":["../../src/bin/genkit.ts"],"names":[],"mappings":";;;AAmBA,gCAAkC;AAElC,KAAK,CAAC,KAAK,IAAI,EAAE;IACf,MAAM,IAAA,cAAQ,GAAE,CAAC;IACjB,OAAO,CAAC,IAAI,EAAE,CAAC;AACjB,CAAC,CAAC,EAAE,CAAC"}

@@ -1,0 +1,120 @@
+/**
+ * Copyright 2024 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Action, EvalInputDataset } from '@genkit-ai/tools-common';
+import {
+  EvalExporter,
+  getAllEvaluatorActions,
+  getExporterForString,
+  getMatchingEvaluatorActions,
+  runEvaluation,
+} from '@genkit-ai/tools-common/eval';
+import {
+  confirmLlmUse,
+  loadEvaluationDatasetFile,
+  logger,
+} from '@genkit-ai/tools-common/utils';
+import { Command } from 'commander';
+import { runWithManager } from '../utils/manager-utils';
+
+interface EvalRunCliOptions {
+  output?: string;
+  evaluators?: string;
+  force?: boolean;
+  outputFormat: string;
+}
+
+/** Command to run evaluation on a dataset. */
+export const evalRun = new Command('eval:run')
+  .description('evaluate provided dataset against configured evaluators')
+  .argument(
+    '<dataset>',
+    'Dataset to evaluate on (currently only supports JSON)'
+  )
+  .option(
+    '--output <filename>',
+    'name of the output file to write evaluation results. Defaults to json output.'
+  )
+  .option(
+    '--output-format <format>',
+    'The output file format (csv, json)',
+    'json'
+  )
+  .option(
+    '--evaluators <evaluators>',
+    'comma separated list of evaluators to use (by default uses all)'
+  )
+  .option('--force', 'Automatically accept all interactive prompts')
+  .action(async (dataset: string, options: EvalRunCliOptions) => {
+    await runWithManager(async (manager) => {
+      if (!dataset) {
+        throw new Error(
+          'No input data passed. Specify input data using [data] argument'
+        );
+      }
+
+      let evaluatorActions: Action[];
+      if (!options.evaluators) {
+        evaluatorActions = await getAllEvaluatorActions(manager);
+      } else {
+        const evalActionKeys = options.evaluators
+          .split(',')
+          .map((k) => `/evaluator/${k}`);
+        evaluatorActions = await getMatchingEvaluatorActions(
+          manager,
+          evalActionKeys
+        );
+      }
+      if (!evaluatorActions.length) {
+        throw new Error(
+          options.evaluators
+            ? `No matching evaluators found for '${options.evaluators}'`
+            : `No evaluators found in your app`
+        );
+      }
+      logger.info(
+        `Using evaluators: ${evaluatorActions.map((action) => action.name).join(',')}`
+      );
+
+      if (!options.force) {
+        const confirmed = await confirmLlmUse(evaluatorActions);
+        if (!confirmed) {
+          if (!confirmed) {
+            throw new Error('User declined using billed evaluators.');
+          }
+        }
+      }
+
+      const evalDataset: EvalInputDataset =
+        await loadEvaluationDatasetFile(dataset);
+      const evalRun = await runEvaluation({
+        manager,
+        evaluatorActions,
+        evalDataset,
+      });
+
+      if (options.output) {
+        const exportFn: EvalExporter = getExporterForString(
+          options.outputFormat
+        );
+        await exportFn(evalRun, options.output);
+      }
+
+      console.log(
+        `Succesfully ran evaluation, with evalId: ${evalRun.key.evalRunId}`
+      );
+    });
+  });

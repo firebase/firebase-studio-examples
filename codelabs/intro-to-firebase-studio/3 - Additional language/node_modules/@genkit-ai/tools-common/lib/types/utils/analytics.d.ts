@@ -1,0 +1,42 @@
+import { AnalyticsInfo } from '../types/analytics';
+export declare const ANALYTICS_OPT_OUT_CONFIG_TAG = "analyticsOptOut";
+declare abstract class GAEvent {
+    abstract name: string;
+    parameters?: Record<string, string | number | undefined>;
+    stickyParameters?: Record<string, string | number | undefined>;
+    abstract duration: number;
+}
+export declare class PageViewEvent extends GAEvent {
+    name: string;
+    duration: number;
+    constructor(page_title: string);
+}
+export declare class FirstUsageEvent extends GAEvent {
+    name: string;
+    duration: number;
+    constructor();
+}
+export declare class ToolsRequestEvent extends GAEvent {
+    name: string;
+    duration: number;
+    constructor(route: string);
+}
+export declare class RunCommandEvent extends GAEvent {
+    name: string;
+    duration: number;
+    constructor(command: string);
+}
+export declare class InitEvent extends GAEvent {
+    name: string;
+    duration: number;
+    constructor(platform: 'firebase' | 'googlecloud' | 'nodejs' | 'nextjs' | 'go');
+}
+export declare class ConfigEvent extends GAEvent {
+    name: string;
+    duration: number;
+    constructor(key: 'analyticsOptOut');
+}
+export declare function record(event: GAEvent): Promise<void>;
+export declare function notifyAnalyticsIfFirstRun(): Promise<void>;
+export declare function getAnalyticsSettings(): AnalyticsInfo;
+export {};

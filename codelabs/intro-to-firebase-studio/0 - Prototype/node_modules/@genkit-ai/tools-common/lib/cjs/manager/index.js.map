@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sourceRoot":"","sources":["../../../src/manager/index.ts"],"names":[],"mappings":";;;;;;;;;;;;;;;;;AAgBA,qCAA2C;AAAlC,yGAAA,cAAc,OAAA;AACvB,0CAAwB"}

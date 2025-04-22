@@ -6,7 +6,7 @@
 
 This repository contains a collection of examples, templates and
 demos showcasing use cases of
-[Firebase Studio][firebase-studio].
+[Firebase Studio][firebase-studio], as well as files referenced in [Firebase Studio][firebase-studio] codelabs.
 
 Each [example app](./example-apps) contains an application generated using
 the [app prototying agent][app-prototyping-agent] in
